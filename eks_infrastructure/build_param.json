@@ -1,5 +1,5 @@
 {
-    "operation": "upgrade_cluster",
+    "operation": "delete",
     "contexts": [
         "PR"
     ],
