@@ -52,12 +52,77 @@ function upgrade_nodegroups() {
   if [ -n "${LIST_NODE_GROUPS}" ]; then
 
     for NODEGROUP in ${LIST_NODE_GROUPS}; do
-      eksctl upgrade nodegroup \
-        --name ${NODEGROUP} \
-        --cluster ${CLUSTER} \
-        --kubernetes-version ${EKS_VERSION} \
-        --timeout 90m \
-        --region ${REGION} || echo "${NODEGROUP}" >> ${ERROR_LOG}
+      # Get current nodegroup AMI type
+      NODEGROUP_INFO=$(eksctl get nodegroup --cluster ${CLUSTER} --name ${NODEGROUP} --region ${REGION} -o json)
+      CURRENT_AMI_TYPE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].AMIType // "AL2_x86_64"')
+      
+      echo "Nodegroup ${NODEGROUP} current AMI type: ${CURRENT_AMI_TYPE}"
+      
+      # Check if current AMI is AL2 (needs recreation for EKS 1.33+)
+      if [[ "${CURRENT_AMI_TYPE}" == "AL2_x86_64" ]] || [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]]; then
+        echo "AL2 detected. Checking if upgrade to AL2023 is needed..."
+        
+        # Check if target EKS version requires AL2023 (1.33+)
+        if [[ "${EKS_VERSION}" == "1.33" ]] || [[ "${EKS_VERSION}" > "1.33" ]]; then
+          echo "EKS ${EKS_VERSION} requires AL2023. Recreating nodegroup ${NODEGROUP}..."
+          
+          # Get current nodegroup configuration
+          INSTANCE_TYPE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].InstanceType // "m5.xlarge"')
+          DESIRED_CAPACITY=$(echo ${NODEGROUP_INFO} | jq -r '.[0].DesiredCapacity // 2')
+          MIN_SIZE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].MinSize // 1')
+          MAX_SIZE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].MaxSize // 4')
+          VOLUME_SIZE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].VolumeSize // 80')
+          
+          # Get labels and tags if they exist
+          LABELS=$(echo ${NODEGROUP_INFO} | jq -r '.[0].Labels // {}' | jq -r 'to_entries | map("--node-labels \(.key)=\(.value)") | join(" ")')
+          
+          # Determine new AMI family based on architecture
+          if [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]]; then
+            NEW_AMI_FAMILY="AmazonLinux2023/ARM_64"
+          else
+            NEW_AMI_FAMILY="AmazonLinux2023"
+          fi
+          
+          # Delete old AL2 nodegroup
+          eksctl delete nodegroup \
+            --cluster ${CLUSTER} \
+            --name ${NODEGROUP} \
+            --drain-timeout 15m \
+            --region ${REGION} \
+            --wait || echo "${NODEGROUP}-delete" >> ${ERROR_LOG}
+          
+          # Create new AL2023 nodegroup
+          eksctl create nodegroup \
+            --cluster ${CLUSTER} \
+            --name ${NODEGROUP} \
+            --node-type ${INSTANCE_TYPE} \
+            --nodes ${DESIRED_CAPACITY} \
+            --nodes-min ${MIN_SIZE} \
+            --nodes-max ${MAX_SIZE} \
+            --node-volume-size ${VOLUME_SIZE} \
+            --node-ami-family ${NEW_AMI_FAMILY} \
+            --region ${REGION} \
+            ${LABELS} || echo "${NODEGROUP}-create" >> ${ERROR_LOG}
+        else
+          # AL2 is still supported for this version, do standard upgrade
+          echo "EKS ${EKS_VERSION} still supports AL2. Performing standard upgrade..."
+          eksctl upgrade nodegroup \
+            --name ${NODEGROUP} \
+            --cluster ${CLUSTER} \
+            --kubernetes-version ${EKS_VERSION} \
+            --timeout 90m \
+            --region ${REGION} || echo "${NODEGROUP}" >> ${ERROR_LOG}
+        fi
+      else
+        # Already on AL2023 or other AMI type, do standard upgrade
+        echo "AMI type ${CURRENT_AMI_TYPE} detected. Performing standard upgrade..."
+        eksctl upgrade nodegroup \
+          --name ${NODEGROUP} \
+          --cluster ${CLUSTER} \
+          --kubernetes-version ${EKS_VERSION} \
+          --timeout 90m \
+          --region ${REGION} || echo "${NODEGROUP}" >> ${ERROR_LOG}
+      fi
     done
   else
     echo "No Nodegroups present in the EKS cluster ${1}"

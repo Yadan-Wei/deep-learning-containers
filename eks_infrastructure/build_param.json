@@ -1,5 +1,5 @@
 {
-    "operation": "upgrade_cluster",
+    "operation": "upgrade_nodegroup",
     "contexts": [
         "PR"
     ],

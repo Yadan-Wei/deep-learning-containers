@@ -83,6 +83,15 @@ function create_node_group() {
   INF_NODEGROUP_INSTANCE_TYPE="inf1.xlarge"
   GRAVITON_NODEGROUP_INSTANCE_TYPE="c6g.4xlarge"
 
+  # Determine AMI family based on EKS version
+  AMI_FAMILY=""
+  if [[ "${2}" == "1.33" ]] || [[ "${2}" > "1.33" ]]; then
+    AMI_FAMILY="--node-ami-family AmazonLinux2023"
+    echo "Using AL2023 for EKS version ${2}"
+  else
+    echo "Using default AL2 for EKS version ${2}"
+  fi
+
   # static nodegroup
   eksctl create nodegroup \
     --name ${1}-static-nodegroup-${2/./-} \
@@ -93,7 +102,8 @@ function create_node_group() {
     --tags "k8s.io/cluster-autoscaler/node-template/label/static=true" \
     --asg-access \
     --ssh-access \
-    --ssh-public-key "${3}"
+    --ssh-public-key "${3}" \
+    ${AMI_FAMILY}
 
 
   if [[ ${1} == *"vllm"* ]]; then
@@ -122,7 +132,8 @@ function create_node_group() {
     --tags "k8s.io/cluster-autoscaler/node-template/label/test_type=gpu" \
     --asg-access \
     --ssh-access \
-    --ssh-public-key "${3}"
+    --ssh-public-key "${3}" \
+    ${AMI_FAMILY}
 
   # dynamic inf nodegroup
   eksctl create nodegroup \
@@ -136,7 +147,8 @@ function create_node_group() {
     --tags "k8s.io/cluster-autoscaler/node-template/label/test_type=inf,k8s.io/cluster-autoscaler/node-template/resources/aws.amazon.com/neuron=1,k8s.io/cluster-autoscaler/node-template/resources/hugepages-2Mi=256Mi" \
     --asg-access \
     --ssh-access \
-    --ssh-public-key "${3}"
+    --ssh-public-key "${3}" \
+    ${AMI_FAMILY}
 
   # dynamic graviton nodegroup
   eksctl create nodegroup \
@@ -151,7 +163,8 @@ function create_node_group() {
     --asg-access \
     --managed=true \
     --ssh-access \
-    --ssh-public-key "${3}"
+    --ssh-public-key "${3}" \
+    ${AMI_FAMILY}
 }
 
 #Function to upgrade core k8s components
