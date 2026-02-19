@@ -54,12 +54,12 @@ function upgrade_nodegroups() {
     for NODEGROUP in ${LIST_NODE_GROUPS}; do
       # Get current nodegroup AMI type
       NODEGROUP_INFO=$(eksctl get nodegroup --cluster ${CLUSTER} --name ${NODEGROUP} --region ${REGION} -o json)
-      CURRENT_AMI_TYPE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].AMIType // "AL2_x86_64"')
+      CURRENT_AMI_TYPE=$(echo ${NODEGROUP_INFO} | jq -r '.[0].ImageID // "AL2_x86_64"')
       
       echo "Nodegroup ${NODEGROUP} current AMI type: ${CURRENT_AMI_TYPE}"
       
       # Check if current AMI is AL2 (needs recreation for EKS 1.33+)
-      if [[ "${CURRENT_AMI_TYPE}" == "AL2_x86_64" ]] || [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]]; then
+      if [[ "${CURRENT_AMI_TYPE}" == "AL2_x86_64" ]] || [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]] || [[ "${CURRENT_AMI_TYPE}" == *"AL2_"* ]]; then
         echo "AL2 detected. Checking if upgrade to AL2023 is needed..."
         
         # Check if target EKS version requires AL2023 (1.33+)
@@ -77,7 +77,7 @@ function upgrade_nodegroups() {
           LABELS=$(echo ${NODEGROUP_INFO} | jq -r '.[0].Labels // {}' | jq -r 'to_entries | map("--node-labels \(.key)=\(.value)") | join(" ")')
           
           # Determine new AMI family based on architecture
-          if [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]]; then
+          if [[ "${CURRENT_AMI_TYPE}" == "AL2_ARM_64" ]] || [[ "${CURRENT_AMI_TYPE}" == *"ARM_64"* ]]; then
             NEW_AMI_FAMILY="AmazonLinux2023/ARM_64"
           else
             NEW_AMI_FAMILY="AmazonLinux2023"
@@ -87,7 +87,7 @@ function upgrade_nodegroups() {
           eksctl delete nodegroup \
             --cluster ${CLUSTER} \
             --name ${NODEGROUP} \
-            --drain-timeout 15m \
+            --drain \
             --region ${REGION} \
             --wait || echo "${NODEGROUP}-delete" >> ${ERROR_LOG}
           
