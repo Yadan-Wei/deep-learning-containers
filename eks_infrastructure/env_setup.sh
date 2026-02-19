@@ -8,7 +8,7 @@ set -ex
 KUBECTL_CLIENT="https://s3.us-west-2.amazonaws.com/amazon-eks/1.35.0/2026-01-29/bin/linux/amd64/kubectl"
 EKSCTL_CLIENT="https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz"
 # https://github.com/kubernetes-sigs/aws-iam-authenticator/releases?page=1 to find the version support
-AWS_IAM_AUTHENTICATOR="https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.10/aws-iam-authenticator_0.7.2_linux_amd64"
+AWS_IAM_AUTHENTICATOR="https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.10/aws-iam-authenticator_0.7.10_linux_amd64"
 
 LATEST_KUBECTL_CLIENT_VERSION=1.35
 
