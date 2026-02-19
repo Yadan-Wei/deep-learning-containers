@@ -88,6 +88,7 @@ function upgrade_nodegroups() {
             --cluster ${CLUSTER} \
             --name ${NODEGROUP} \
             --drain \
+            --disable-eviction \
             --region ${REGION} \
             --wait || echo "${NODEGROUP}-delete" >> ${ERROR_LOG}
           
