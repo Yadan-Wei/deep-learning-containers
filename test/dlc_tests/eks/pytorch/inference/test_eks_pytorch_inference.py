@@ -172,6 +172,12 @@ def __test_eks_pytorch_densenet_inference(pytorch_inference, disable_token_auth=
         port_to_forward = random.randint(49152, 65535)
 
         if eks_utils.is_service_running(selector_name):
+            # Wait for pod to be fully ready ----
+            run(
+                f"kubectl wait --for=condition=ready pod -l app={selector_name} "
+                f"--timeout=300s",
+                warn=True,
+            )
             eks_utils.eks_forward_port_between_host_and_container(
                 selector_name, port_to_forward, "8080"
             )
