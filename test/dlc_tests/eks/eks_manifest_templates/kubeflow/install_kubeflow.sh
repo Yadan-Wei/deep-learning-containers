@@ -7,7 +7,7 @@ set -ex
 
 # Function to install kustomize
 install_kustomize(){
-    KUSTOMIZE_VERSION="v5.8.1"
+    KUSTOMIZE_VERSION="v5.7.1"
     KUSTOMIZE_URL="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
 
     if ! command -v kustomize &> /dev/null
