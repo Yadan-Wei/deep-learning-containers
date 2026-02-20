@@ -26,10 +26,10 @@ install_kustomize(){
 install_kubeflow(){
 
     echo "> Installing kubeflow namespace"
-    kustomize build manifests/common/kubeflow-namespace/base | kubectl apply -f -
+    kustomize build manifests/common/kubeflow-namespace/base | kubectl apply --server-side -f -
 
     echo "> Installing training operators"
-    kustomize build manifests/apps/training-operator/upstream/overlays/kubeflow | kubectl apply -f -
+    kustomize build manifests/apps/training-operator/upstream/overlays/kubeflow | kubectl apply --server-side --force-conflicts -f -
 }
 
 # Function to remove kubeflow training operators in EKS cluster using kustomize
