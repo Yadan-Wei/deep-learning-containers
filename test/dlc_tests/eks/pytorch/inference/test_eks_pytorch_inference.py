@@ -178,6 +178,24 @@ def __test_eks_pytorch_densenet_inference(pytorch_inference, disable_token_auth=
             )
             # Give port-forward time to establish connection
             time.sleep(5)
+            
+            # Wait for TorchServe to be ready by checking health endpoint
+            max_wait = 120  # 2 minutes max wait
+            wait_interval = 5
+            elapsed = 0
+            while elapsed < max_wait:
+                try:
+                    health_check = run(
+                        f"curl -s http://127.0.0.1:{port_to_forward}/ping",
+                        warn=True,
+                        hide=True
+                    )
+                    if health_check.return_code == 0:
+                        break
+                except:
+                    pass
+                time.sleep(wait_interval)
+                elapsed += wait_interval
 
         assert test_utils.request_pytorch_inference_densenet(
             port=port_to_forward, server_type=server_type

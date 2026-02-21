@@ -36,15 +36,6 @@ spec:
         - --start<DISABLE_TOKEN_AUTH>
         - --<SERVER_TYPE>-config /home/model-server/config.properties
         - --models <MODELS>
-        env:
-        - name: TS_DEFAULT_RESPONSE_TIMEOUT
-          value: "300"
-        - name: TS_NUMBER_OF_GPU
-          value: "0"
-        - name: OMP_NUM_THREADS
-          value: "1"
-        - name: MKL_NUM_THREADS
-          value: "1"
         ports:
         - name: <SERVER_TYPE>
           containerPort: 8080
