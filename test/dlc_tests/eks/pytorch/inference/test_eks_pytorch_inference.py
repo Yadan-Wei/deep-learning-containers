@@ -174,8 +174,8 @@ def __test_eks_pytorch_densenet_inference(pytorch_inference, disable_token_auth=
 
         if eks_utils.is_service_running(selector_name):
             # Wait for pod to be fully ready ----
-            # Model load takes ~46s, add buffer
-            time.sleep(90)
+            # Model load takes ~46s on GPU, much longer on CPU, add buffer
+            time.sleep(180)
             eks_utils.eks_forward_port_between_host_and_container(
                 selector_name, port_to_forward, "8080"
             )

@@ -1020,8 +1020,8 @@ def request_mxnet_inference_gluonnlp(ip_address="127.0.0.1", port="80", connecti
 
 
 @retry(
-    stop_max_attempt_number=10,
-    wait_fixed=10000,
+    stop_max_attempt_number=20,
+    wait_fixed=30000,
     retry_on_result=retry_if_result_is_false,
 )
 def request_pytorch_inference_densenet(

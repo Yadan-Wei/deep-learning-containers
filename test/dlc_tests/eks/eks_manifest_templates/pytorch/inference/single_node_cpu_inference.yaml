@@ -36,6 +36,11 @@ spec:
         - --start<DISABLE_TOKEN_AUTH>
         - --<SERVER_TYPE>-config /home/model-server/config.properties
         - --models <MODELS>
+        env:
+        - name: TS_RESPONSE_TIMEOUT
+          value: "300"
+        - name: TS_DEFAULT_RESPONSE_TIMEOUT
+          value: "300"
         ports:
         - name: <SERVER_TYPE>
           containerPort: 8080
@@ -45,9 +50,9 @@ spec:
         resources:
           limits:
             cpu: "1"
-            memory: 1Gi
+            memory: 4Gi
           requests:
             cpu: "1"
-            memory: 1Gi
+            memory: 4Gi
       nodeSelector:
         test_type: <TEST_TYPE>
