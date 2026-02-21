@@ -37,10 +37,14 @@ spec:
         - --<SERVER_TYPE>-config /home/model-server/config.properties
         - --models <MODELS>
         env:
-        - name: TS_RESPONSE_TIMEOUT
-          value: "300"
         - name: TS_DEFAULT_RESPONSE_TIMEOUT
           value: "300"
+        - name: TS_NUMBER_OF_GPU
+          value: "0"
+        - name: OMP_NUM_THREADS
+          value: "1"
+        - name: MKL_NUM_THREADS
+          value: "1"
         ports:
         - name: <SERVER_TYPE>
           containerPort: 8080
@@ -50,9 +54,9 @@ spec:
         resources:
           limits:
             cpu: "1"
-            memory: 4Gi
+            memory: 1Gi
           requests:
             cpu: "1"
-            memory: 4Gi
+            memory: 1Gi
       nodeSelector:
         test_type: <TEST_TYPE>
