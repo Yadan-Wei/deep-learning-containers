@@ -166,8 +166,7 @@ RUN pip install --no-cache-dir \
     idna \
     tqdm \
     requests \
-    # sagemaker_pytorch_serving_container/torchserve needs pkg_resources
-    "setuptools>=80.10.1,<82.0.0" \
+    "setuptools>=80.10.1" \
     urllib3 \
     awscli \
     types-python-dateutil \
